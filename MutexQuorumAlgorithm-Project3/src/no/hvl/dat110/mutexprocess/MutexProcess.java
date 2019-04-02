@@ -137,7 +137,9 @@ public class MutexProcess extends UnicastRemoteObject implements ProcessInterfac
 			try {
 				ProcessInterface pi = Util.registryHandle(rep);
 				//Hentet ut prosessen.. Hva skal den brukes til?
-				pi.
+				
+				Operations op = new Operations(pi, message);
+				op.performOperation();
 			} catch (NotBoundException e) {
 				e.printStackTrace();
 			}
