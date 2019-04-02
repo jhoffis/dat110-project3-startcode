@@ -75,11 +75,19 @@ public class MutexProcess extends UnicastRemoteObject implements ProcessInterfac
 
 	public void acquireLock() throws RemoteException {
 		// logical clock update and set CS variable
+		
+		CS_BUSY = true;
+		
+		// 
 	}
 
 	public void releaseLocks() throws RemoteException {
 
 		// release your lock variables and logical clock update
+		
+		CS_BUSY = false;
+		
+		// update clock
 	}
 
 	public boolean requestWriteOperation(Message message) throws RemoteException {
@@ -124,12 +132,14 @@ public class MutexProcess extends UnicastRemoteObject implements ProcessInterfac
 
 		// multicast message to N/2 + 1 processes (random processes) - block until
 		// feedback is received
-		int N = replicas.size();
-		int quorum = N / 2 + 1;
-		boolean res = multicastMessage(message, quorum);
+		
+		
+		
 		// do something with the acknowledgement you received from the voters - Idea:
 		// use the queueACK to collect GRANT/DENY messages and make sure queueACK is
 		// synchronized!!! 
+		
+		
 
 		//Å ja, bare ha en test greie... Men hvordan brukes queueACK. add en onmessagerecieved(message)
 
@@ -182,8 +192,18 @@ public class MutexProcess extends UnicastRemoteObject implements ProcessInterfac
 		// count the number of yes (i.e. where message.isAcknowledged = true)
 		// check if it is the majority or not
 		// return the decision (true or false)
+		
+		int totalAcknowledged = 0;
+		
+		for(Message message : queueACK) 
+		{
+			if(message.isAcknowledged())
+				totalAcknowledged++;
+		}
+		
+		return (totalAcknowledged > queueACK.size() / 2  + 1);
 
-		return false; // change this to the result of the vote
+		 // change this to the result of the vote
 	}
 
 	@Override
