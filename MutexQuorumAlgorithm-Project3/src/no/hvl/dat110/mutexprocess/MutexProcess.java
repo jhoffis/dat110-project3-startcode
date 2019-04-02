@@ -3,6 +3,7 @@ package no.hvl.dat110.mutexprocess;
 import java.io.File;
 import java.io.IOException;
 import java.rmi.AccessException;
+import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
 import java.util.ArrayList;
@@ -77,8 +78,7 @@ public class MutexProcess extends UnicastRemoteObject implements ProcessInterfac
 		// logical clock update and set CS variable
 		
 		CS_BUSY = true;
-		
-		// 
+		incrementclock();
 	}
 
 	public void releaseLocks() throws RemoteException {
@@ -86,7 +86,7 @@ public class MutexProcess extends UnicastRemoteObject implements ProcessInterfac
 		// release your lock variables and logical clock update
 		
 		CS_BUSY = false;
-		
+		incrementclock();
 		// update clock
 	}
 
@@ -133,6 +133,15 @@ public class MutexProcess extends UnicastRemoteObject implements ProcessInterfac
 		// multicast message to N/2 + 1 processes (random processes) - block until
 		// feedback is received
 		
+		for(String rep : replicas) {
+			try {
+				ProcessInterface pi = Util.registryHandle(rep);
+				//Hentet ut prosessen.. Hva skal den brukes til?
+				pi.
+			} catch (NotBoundException e) {
+				e.printStackTrace();
+			}
+		}
 		
 		
 		// do something with the acknowledgement you received from the voters - Idea:
@@ -203,7 +212,6 @@ public class MutexProcess extends UnicastRemoteObject implements ProcessInterfac
 		
 		return (totalAcknowledged > queueACK.size() / 2  + 1);
 
-		 // change this to the result of the vote
 	}
 
 	@Override
