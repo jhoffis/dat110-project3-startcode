@@ -8,6 +8,7 @@ import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.LinkedList;
 import java.util.List;
 
 import no.hvl.dat110.interfaces.ProcessInterface;
@@ -205,9 +206,10 @@ public class MutexProcess extends UnicastRemoteObject implements ProcessInterfac
 		// return the decision (true or false)
 
 		int totalAcknowledged = 0;
-
-		for (Message message : queueACK) {
-			if (message.isAcknowledged())
+		int N = queueACK.size();
+		LinkedList<Message> list = (LinkedList<Message>) queueACK;
+		for (int i = 0; i < N; i++) {
+			if (list.removeFirst().isAcknowledged())
 				totalAcknowledged++;
 		}
 
@@ -220,8 +222,8 @@ public class MutexProcess extends UnicastRemoteObject implements ProcessInterfac
 
 		// release CS lock if voter initiator says he was denied access bcos he lacks
 		// majority votes
-		//Tell everyone of the boolean desitiion
-		
+		// Tell everyone of the boolean desitiion
+
 		if (!message.isAcknowledged()) {
 			// Release
 			CS_BUSY = false;
