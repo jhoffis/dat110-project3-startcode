@@ -76,7 +76,7 @@ public class MutexProcess extends UnicastRemoteObject implements ProcessInterfac
 
 	public void acquireLock() throws RemoteException {
 		// logical clock update and set CS variable
-		
+
 		CS_BUSY = true;
 		incrementclock();
 	}
@@ -84,7 +84,7 @@ public class MutexProcess extends UnicastRemoteObject implements ProcessInterfac
 	public void releaseLocks() throws RemoteException {
 
 		// release your lock variables and logical clock update
-		
+
 		CS_BUSY = false;
 		incrementclock();
 		// update clock
@@ -96,11 +96,10 @@ public class MutexProcess extends UnicastRemoteObject implements ProcessInterfac
 		message.setProcessID(processId); // set the process ID
 		message.setOptype(OperationType.WRITE);
 
-		return multicastMessage(message, quorum);
+		return multicastMessage(message, N - 1);
 
 		// multicast read request to start the voting to N/2 + 1 replicas (majority) -
 		// optimal. You could as well send to all the replicas that have the file
-		// TODO begin here
 
 		// FIXME maybe. Skal denne bli godkjent bare her? Eller ved alle? Altså denne
 		// holder jo på alle andre registries sine navn, men har ikke kobling.
@@ -119,7 +118,7 @@ public class MutexProcess extends UnicastRemoteObject implements ProcessInterfac
 		// multicast read request to start the voting to N/2 + 1 replicas (majority) -
 		// optimal. You could as well send to all the replicas that have the file
 
-		return false; // change to the election result
+		return multicastMessage(message, N - 1); // change to the election result
 	}
 
 	// multicast message to N/2 + 1 processes (random processes)
@@ -132,27 +131,28 @@ public class MutexProcess extends UnicastRemoteObject implements ProcessInterfac
 
 		// multicast message to N/2 + 1 processes (random processes) - block until
 		// feedback is received
-		
-		for(String rep : replicas) {
+
+		CS_BUSY = true;
+
+		for (String rep : replicas) {
 			try {
 				ProcessInterface pi = Util.registryHandle(rep);
-				//Hentet ut prosessen.. Hva skal den brukes til?
-				
-				Operations op = new Operations(pi, message);
-				op.performOperation();
+				// Hentet ut prosessen.. Hva skal den brukes til?
+
+				queueACK.add(pi.onMessageReceived(message));
 			} catch (NotBoundException e) {
 				e.printStackTrace();
 			}
 		}
-		
-		
+
+		CS_BUSY = false;
+
 		// do something with the acknowledgement you received from the voters - Idea:
 		// use the queueACK to collect GRANT/DENY messages and make sure queueACK is
-		// synchronized!!! 
-		
-		
+		// synchronized!!!
 
-		//Å ja, bare ha en test greie... Men hvordan brukes queueACK. add en onmessagerecieved(message)
+		// Å ja, bare ha en test greie... Men hvordan brukes queueACK. add en
+		// onmessagerecieved(message)
 
 		// compute election result - Idea call majorityAcknowledged()
 		replicas = Util.getProcessReplicas();
@@ -203,16 +203,15 @@ public class MutexProcess extends UnicastRemoteObject implements ProcessInterfac
 		// count the number of yes (i.e. where message.isAcknowledged = true)
 		// check if it is the majority or not
 		// return the decision (true or false)
-		
+
 		int totalAcknowledged = 0;
-		
-		for(Message message : queueACK) 
-		{
-			if(message.isAcknowledged())
+
+		for (Message message : queueACK) {
+			if (message.isAcknowledged())
 				totalAcknowledged++;
 		}
-		
-		return (totalAcknowledged > queueACK.size() / 2  + 1);
+
+		return (totalAcknowledged >= quorum);
 
 	}
 
@@ -221,9 +220,15 @@ public class MutexProcess extends UnicastRemoteObject implements ProcessInterfac
 
 		// release CS lock if voter initiator says he was denied access bcos he lacks
 		// majority votes
-
-		// otherwise lock is kept
-
+		//Tell everyone of the boolean desitiion
+		
+		if (!message.isAcknowledged()) {
+			// Release
+			CS_BUSY = false;
+		} else {
+			// otherwise lock is kept - says hey im about to use this critical section.
+			CS_BUSY = true;
+		}
 	}
 
 	@Override
@@ -233,6 +238,10 @@ public class MutexProcess extends UnicastRemoteObject implements ProcessInterfac
 		// perform operation by using the Operations class
 		// Release locks after this operation
 
+		if (message.getOptype() == OperationType.WRITE) {
+
+		}
+
 	}
 
 	@Override
@@ -240,6 +249,11 @@ public class MutexProcess extends UnicastRemoteObject implements ProcessInterfac
 
 		// check the operation type:
 		// if this is a write operation, multicast the update to the rest of the
+		if (message.getOptype() == OperationType.WRITE) {
+
+		} else {
+			// READ
+		}
 		// replicas (voters)
 		// otherwise if this is a READ operation multicast releaselocks to the replicas
 		// (voters)
@@ -248,6 +262,16 @@ public class MutexProcess extends UnicastRemoteObject implements ProcessInterfac
 	@Override
 	public void multicastVotersDecision(Message message) throws RemoteException {
 		// multicast voters decision to the rest of the replicas
+
+		replicas.remove(this.procStubname); // remove this process from the list
+
+		for (String rep : replicas) {
+			try {
+				Util.registryHandle(rep).onReceivedVotersDecision(message);
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+		}
 
 	}
 
