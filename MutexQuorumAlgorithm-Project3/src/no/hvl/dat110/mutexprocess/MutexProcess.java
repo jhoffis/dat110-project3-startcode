@@ -85,7 +85,6 @@ public class MutexProcess extends UnicastRemoteObject implements ProcessInterfac
 	public void releaseLocks() throws RemoteException {
 
 		// release your lock variables and logical clock update
-
 		CS_BUSY = false;
 		incrementclock();
 		// update clock
@@ -97,15 +96,9 @@ public class MutexProcess extends UnicastRemoteObject implements ProcessInterfac
 		message.setProcessID(processId); // set the process ID
 		message.setOptype(OperationType.WRITE);
 
-		return multicastMessage(message, N - 1);
-
 		// multicast read request to start the voting to N/2 + 1 replicas (majority) -
 		// optimal. You could as well send to all the replicas that have the file
-
-		// FIXME maybe. Skal denne bli godkjent bare her? Eller ved alle? Altså denne
-		// holder jo på alle andre registries sine navn, men har ikke kobling.
-
-		// change to the election result
+		return multicastMessage(message, N - 1);
 	}
 
 	public boolean requestReadOperation(Message message) throws RemoteException {
@@ -207,10 +200,10 @@ public class MutexProcess extends UnicastRemoteObject implements ProcessInterfac
 
 		int totalAcknowledged = 0;
 		int N = queueACK.size();
-		LinkedList<Message> list = (LinkedList<Message>) queueACK;
-		for (int i = 0; i < N; i++) {
-			if (list.removeFirst().isAcknowledged())
+		for (int i = queueACK.size() - 1; i >= 0; i--) {
+			if (queueACK.get(i).isAcknowledged())
 				totalAcknowledged++;
+			queueACK.remove(i);
 		}
 
 		return (totalAcknowledged >= quorum);
@@ -241,7 +234,23 @@ public class MutexProcess extends UnicastRemoteObject implements ProcessInterfac
 		// Release locks after this operation
 
 		if (message.getOptype() == OperationType.WRITE) {
-			
+			ProcessInterface process = null;
+			try {
+				process = Util.registryHandle(message.getProcessStubName());
+			} catch (NotBoundException e) {
+				e.printStackTrace();
+			}
+
+			// Case try fails
+			if (process != null) {
+				Operations op = new Operations(process, message);
+				// do operations
+
+				op.performOperation();
+
+				// done
+				process.releaseLocks();
+			}
 		}
 
 	}
@@ -251,14 +260,28 @@ public class MutexProcess extends UnicastRemoteObject implements ProcessInterfac
 
 		// check the operation type:
 		// if this is a write operation, multicast the update to the rest of the
-		if (message.getOptype() == OperationType.WRITE) {
-
-		} else {
-			// READ
-		}
 		// replicas (voters)
 		// otherwise if this is a READ operation multicast releaselocks to the replicas
 		// (voters)
+		
+		ProcessInterface process = null;
+		try {
+			process = Util.registryHandle(message.getProcessStubName());
+		} catch (NotBoundException e) {
+			e.printStackTrace();
+		}
+
+		// Case try fails
+		if (process != null) {
+			return;
+		}
+
+		Operations op = new Operations(process, message);
+
+		if (message.getOptype() == OperationType.WRITE)
+			op.multicastOperationToReplicas(message);
+		else
+			op.multicastReadReleaseLocks(); // optype == READ
 	}
 
 	@Override

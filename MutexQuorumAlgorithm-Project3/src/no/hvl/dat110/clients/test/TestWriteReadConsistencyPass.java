@@ -87,6 +87,18 @@ class TestWriteReadConsistencyPass {
 		boolean succeed = performWriteOperation(p4, wmessage);
 		
 		Assertions.assertTrue(succeed); 					// must pass		
+		//TODO THIS PASSES ATM
+		
+		//Skal versjonene være like allerede nå? eller først når de skal kjøre read? La til disse selv, btw
+		Assertions.assertEquals(p1.getVersion(), p2.getVersion());
+		Assertions.assertEquals(p1.getVersion(), p3.getVersion());
+		Assertions.assertEquals(p1.getVersion(), p4.getVersion());
+		Assertions.assertEquals(p1.getVersion(), p5.getVersion());
+		Assertions.assertEquals(p1.getVersion(), p6.getVersion());
+		Assertions.assertEquals(p1.getVersion(), p7.getVersion());
+		Assertions.assertEquals(p1.getVersion(), p8.getVersion());
+		Assertions.assertEquals(p1.getVersion(), p9.getVersion());
+		Assertions.assertEquals(p1.getVersion(), p10.getVersion());
 		
 		
 		// GOAL: A read operation must produce exactly the same copy of data from any of the replicas after a write operation
@@ -99,6 +111,8 @@ class TestWriteReadConsistencyPass {
 		p6.multicastVotersDecision(rmessage); 				// multicast the decision to others
 		
 		succeed = performReadOperation(p6, rmessage); 		// perform a read operation
+		
+		//FIXME down - fails. Sync feil og readop feil.
 		
 		Assertions.assertTrue(succeed); 					// must pass
 		
