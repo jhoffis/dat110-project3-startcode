@@ -241,7 +241,7 @@ public class MutexProcess extends UnicastRemoteObject implements ProcessInterfac
 		// Release locks after this operation
 
 		if (message.getOptype() == OperationType.WRITE) {
-
+			
 		}
 
 	}
