@@ -145,9 +145,6 @@ public class MutexProcess extends UnicastRemoteObject implements ProcessInterfac
 		// use the queueACK to collect GRANT/DENY messages and make sure queueACK is
 		// synchronized!!!
 
-		// Å ja, bare ha en test greie... Men hvordan brukes queueACK. add en
-		// onmessagerecieved(message)
-
 		// compute election result - Idea call majorityAcknowledged()
 		replicas = Util.getProcessReplicas();
 		return majorityAcknowledged(); // change to the election result
@@ -234,23 +231,13 @@ public class MutexProcess extends UnicastRemoteObject implements ProcessInterfac
 		// Release locks after this operation
 
 		if (message.getOptype() == OperationType.WRITE) {
-			ProcessInterface process = null;
-			try {
-				process = Util.registryHandle(message.getProcessStubName());
-			} catch (NotBoundException e) {
-				e.printStackTrace();
-			}
-
-			// Case try fails
-			if (process != null) {
-				Operations op = new Operations(process, message);
+				Operations op = new Operations(this, message);
 				// do operations
 
 				op.performOperation();
 
 				// done
-				process.releaseLocks();
-			}
+				releaseLocks();
 		}
 
 	}
@@ -264,19 +251,7 @@ public class MutexProcess extends UnicastRemoteObject implements ProcessInterfac
 		// otherwise if this is a READ operation multicast releaselocks to the replicas
 		// (voters)
 		
-		ProcessInterface process = null;
-		try {
-			process = Util.registryHandle(message.getProcessStubName());
-		} catch (NotBoundException e) {
-			e.printStackTrace();
-		}
-
-		// Case try fails
-		if (process != null) {
-			return;
-		}
-
-		Operations op = new Operations(process, message);
+		Operations op = new Operations(this, message);
 
 		if (message.getOptype() == OperationType.WRITE)
 			op.multicastOperationToReplicas(message);
