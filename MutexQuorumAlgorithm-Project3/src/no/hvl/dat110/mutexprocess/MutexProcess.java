@@ -86,6 +86,7 @@ public class MutexProcess extends UnicastRemoteObject implements ProcessInterfac
 
 		// release your lock variables and logical clock update
 		CS_BUSY = false;
+		WANTS_TO_ENTER_CS = false;
 		incrementclock();
 		// update clock
 	}
