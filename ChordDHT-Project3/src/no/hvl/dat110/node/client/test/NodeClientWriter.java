@@ -1,5 +1,7 @@
 package no.hvl.dat110.node.client.test;
 
+import java.math.BigInteger;
+
 /**
  * exercise/demo purpose in dat110
  * @author tdoy
@@ -9,7 +11,9 @@ package no.hvl.dat110.node.client.test;
 import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
 import java.rmi.registry.Registry;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 import no.hvl.dat110.file.FileManager;
 import no.hvl.dat110.node.Message;
@@ -38,17 +42,37 @@ public class NodeClientWriter extends Thread {
 		// Lookup(key) - Use this class as a client that is requesting for a new file and needs the identifier and IP of the node where the file is located
 		// assume you have a list of nodes in the tracker class and select one randomly. We can use the Tracker class for this purpose
 		
+		String activeNode = StaticTracker.ACTIVENODES[0];
+		
+		
 		// connect to an active chord node - can use the process defined in StaticTracker 
 		
-		// Compute the hash of the node's IP address
-		
-		// use the hash to retrieve the ChordNodeInterface remote object from the registry
-		
-		// do: FileManager fm = new FileManager(ChordNodeInterface, StaticTracker.N);
-		
-		// do: boolean succeed = fm.requestWriteToFileFromAnyActiveNode(filename, content);
+		Registry reg = Util.locateRegistry(activeNode);
+		try 
+		{
+			if(reg != null)
+			{
+				// Compute the hash of the node's IP address
+				BigInteger hashActiveNode = Hash.hashOf(activeNode);
+				// use the hash to retrieve the ChordNodeInterface remote object from the registry
+				ChordNodeInterface chordNode = (ChordNodeInterface) reg.lookup(hashActiveNode.toString());
+				
+				if(chordNode != null)
+				{
+					// do: FileManager fm = new FileManager(ChordNodeInterface, StaticTracker.N);
+					FileManager fm = new FileManager(chordNode, StaticTracker.N);
+					// do: boolean succeed = fm.requestWriteToFileFromAnyActiveNode(filename, content);
+					fm.requestWriteToFileFromAnyActiveNode(filename, content);					
+				}
 					
-		
+				
+			}
+			
+		}
+		catch(RemoteException | NotBoundException e) 
+		{
+			e.printStackTrace();
+		}	
 	}
 	
 	public boolean isSucceed() {
