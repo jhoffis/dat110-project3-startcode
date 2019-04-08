@@ -332,7 +332,7 @@ public class Node extends UnicastRemoteObject implements ChordNodeInterface {
 			{
 				try
 				{
-					Registry  reg= Util.locateRegistry(message.getNodeIP());
+					Registry  reg= Util.locateRegistry(m.getNodeIP());
 					ChordNodeInterface node = (ChordNodeInterface) reg.lookup(m.getNodeID().toString());
 					queueACK.add(node.onMessageReceived(message));
 				}

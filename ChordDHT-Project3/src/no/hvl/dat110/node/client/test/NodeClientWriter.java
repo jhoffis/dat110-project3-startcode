@@ -52,14 +52,14 @@ public class NodeClientWriter extends Thread {
 				// Compute the hash of the node's IP address
 				BigInteger hashActiveNode = Hash.hashOf(Util.activeIP);
 				// use the hash to retrieve the ChordNodeInterface remote object from the registry
-				ChordNodeInterface chordNode = (ChordNodeInterface) reg.lookup(hashActiveNode.toString());
+				ChordNodeInterface chordNode = (ChordNodeInterface) reg.lookup(String.valueOf(hashActiveNode));
 				
 				if(chordNode != null)
 				{
 					// do: FileManager fm = new FileManager(ChordNodeInterface, StaticTracker.N);
 					FileManager fm = new FileManager(chordNode, StaticTracker.N);
 					// do: boolean succeed = fm.requestWriteToFileFromAnyActiveNode(filename, content);
-					fm.requestWriteToFileFromAnyActiveNode(filename, content);					
+					succeed = fm.requestWriteToFileFromAnyActiveNode(filename, content);					
 				}
 					
 				

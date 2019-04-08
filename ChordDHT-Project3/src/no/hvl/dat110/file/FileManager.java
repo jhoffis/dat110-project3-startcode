@@ -152,7 +152,7 @@ public class FileManager extends Thread {
 		// (setActiveNodesForFile)
 		node.setActiveNodesForFile(activenodes);
 		// set the NodeIP in the message (replace ip with )
-		m.setNodeIP("localhost");
+		m.setNodeIP(node.getNodeIP());
 		// send a request to a node and get the voters decision
 		boolean decision = node.requestReadOperation(m);
 
@@ -205,7 +205,7 @@ public class FileManager extends Thread {
 		node.setActiveNodesForFile(activenodes);
 
 		// set the NodeIP in the message (replace ip with )
-		m.setNodeIP("localhost");
+		m.setNodeIP(node.getNodeIP());
 
 		// send a request to a node and get the voters decision
 		boolean decision = node.requestWriteOperation(m);
