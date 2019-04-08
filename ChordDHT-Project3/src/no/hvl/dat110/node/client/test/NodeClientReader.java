@@ -34,16 +34,14 @@ public class NodeClientReader extends Thread {
 		// We can use the Tracker class for this purpose
 		// connect to an active chord node - can use the process defined in
 		// StaticTracker
-		
-		String activeNode = StaticTracker.ACTIVENODES[0];
-		
-		Registry reg = Util.locateRegistry(activeNode);
+				
+		Registry reg = Util.tryIPs();
 		try 
 		{
 			if(reg != null)
 			{
 				// Compute the hash of the node's IP address
-				BigInteger hashActiveNode = Hash.hashOf(activeNode);
+				BigInteger hashActiveNode = Hash.hashOf(Util.activeIP);
 				// use the hash to retrieve the ChordNodeInterface remote object from the registry
 				ChordNodeInterface chordNode = (ChordNodeInterface) reg.lookup(hashActiveNode.toString());
 				
