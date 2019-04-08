@@ -18,6 +18,7 @@ import java.util.Random;
 import java.util.Set;
 
 import no.hvl.dat110.node.Message;
+import no.hvl.dat110.node.OperationType;
 import no.hvl.dat110.node.Operations;
 import no.hvl.dat110.rpc.interfaces.ChordNodeInterface;
 import no.hvl.dat110.util.Hash;
@@ -185,6 +186,7 @@ public class FileManager extends Thread {
 		Random r = new Random();
 		Message m = (Message) activenodes.toArray()[r.nextInt(activenodes.size())];
 		m.setNewcontent(newcontent);
+		m.setOptype(OperationType.WRITE);
 		// locate the registry and see if the node is still active by retrieving its
 		// remote object
 		Registry reg = Util.locateRegistry(m.getNodeIP());
@@ -197,7 +199,7 @@ public class FileManager extends Thread {
 		// build the operation to be performed - Read and request for votes in existing
 		// active node message
 		Operations op = new Operations(node, m, activenodes);
-
+		op.setFilecontent(newcontent);
 		// set the active nodes holding replica files in the contact node
 		// (setActiveNodesForFile)
 		node.setActiveNodesForFile(activenodes);
