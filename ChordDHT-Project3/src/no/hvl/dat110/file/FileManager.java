@@ -185,6 +185,7 @@ public class FileManager extends Thread {
 		// choose any available node
 		Random r = new Random();
 		Message m = (Message) activenodes.toArray()[r.nextInt(activenodes.size())];
+		
 		m.setNewcontent(newcontent);
 		m.setOptype(OperationType.WRITE);
 		// locate the registry and see if the node is still active by retrieving its
@@ -199,7 +200,8 @@ public class FileManager extends Thread {
 		// build the operation to be performed - Read and request for votes in existing
 		// active node message
 		Operations op = new Operations(node, m, activenodes);
-		op.setFilecontent(newcontent);
+		
+		
 		// set the active nodes holding replica files in the contact node
 		// (setActiveNodesForFile)
 		node.setActiveNodesForFile(activenodes);

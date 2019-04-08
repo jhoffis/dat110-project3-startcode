@@ -313,7 +313,7 @@ public class Node extends UnicastRemoteObject implements ChordNodeInterface {
 	private boolean multicastMessage(Message message) throws AccessException, RemoteException {
 		
 		
-		activenodesforfile.remove(message); // remove this message
+		activenodesforfile.remove(this); // remove this message
 		
 
 		// randomize - shuffle list each time - to get random processes each time
@@ -486,9 +486,9 @@ public class Node extends UnicastRemoteObject implements ChordNodeInterface {
 
 		for (Message m : messages) {
 			try {
-				Registry reg = Util.locateRegistry(message.getNodeIP());
+				Registry reg = Util.locateRegistry(m.getNodeIP());
 				ChordNodeInterface node = (ChordNodeInterface) reg.lookup(m.getNodeID().toString());
-				Util.registryHandle(node).onReceivedUpdateOperation(message);
+				node.onReceivedUpdateOperation(message);
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
