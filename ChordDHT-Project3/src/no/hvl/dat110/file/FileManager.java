@@ -184,6 +184,7 @@ public class FileManager extends Thread {
 		// choose any available node
 		Random r = new Random();
 		Message m = (Message) activenodes.toArray()[r.nextInt(activenodes.size())];
+		m.setNewcontent(newcontent);
 		// locate the registry and see if the node is still active by retrieving its
 		// remote object
 		Registry reg = Util.locateRegistry(m.getNodeIP());
@@ -193,7 +194,6 @@ public class FileManager extends Thread {
 			System.err.println("Node NOT ACTIVE");
 			return false;
 		}
-		
 		// build the operation to be performed - Read and request for votes in existing
 		// active node message
 		Operations op = new Operations(node, m, activenodes);
