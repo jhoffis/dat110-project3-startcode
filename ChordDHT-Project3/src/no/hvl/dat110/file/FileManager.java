@@ -140,6 +140,7 @@ public class FileManager extends Thread {
 
 		if (node == null) {
 			System.err.println("Node NOT ACTIVE");
+			return false;
 		}
 
 		// build the operation to be performed - Read and request for votes in existing
@@ -168,7 +169,7 @@ public class FileManager extends Thread {
 			// send message to let replicas release read lock they are holding
 			node.multicastUpdateOrReadReleaseLockOperation(m);
 			// release locks after operations
-			op.multicastReadReleaseLocks();
+			node.releaseLocks();
 		}
 		return decision; // change to your final answer
 	}
@@ -178,38 +179,53 @@ public class FileManager extends Thread {
 
 		// get all the activenodes that have the file (replicas) i.e.
 		// requestActiveNodesForFile(String filename)
+		Set<Message> activenodes = requestActiveNodesForFile(filename);
 
 		// choose any available node
-
+		Random r = new Random();
+		Message m = (Message) activenodes.toArray()[r.nextInt(activenodes.size())];
 		// locate the registry and see if the node is still active by retrieving its
 		// remote object
+		Registry reg = Util.locateRegistry(m.getNodeIP());
+		ChordNodeInterface node = (ChordNodeInterface) reg.lookup(String.valueOf(m.getNodeID()));
 
+		if (node == null) {
+			System.err.println("Node NOT ACTIVE");
+			return false;
+		}
+		
 		// build the operation to be performed - Read and request for votes in existing
 		// active node message
+		Operations op = new Operations(node, m, activenodes);
 
 		// set the active nodes holding replica files in the contact node
 		// (setActiveNodesForFile)
+		node.setActiveNodesForFile(activenodes);
 
 		// set the NodeIP in the message (replace ip with )
+		m.setNodeIP("localhost");
 
 		// send a request to a node and get the voters decision
+		boolean decision = node.requestWriteOperation(m);
 
 		// put the decision back in the message
-
+		m.setAcknowledged(decision);
 		// multicast voters' decision to the rest of the nodes
-
+		node.multicastVotersDecision(m);
 		// if majority votes
+		if (decision) {
+			// acquire lock to CS and also increments localclock
+			node.acquireLock();
+			// perform operation by calling Operations class
+			op.performOperation();
 
-		// acquire lock to CS and also increments localclock
-
-		// perform operation by calling Operations class
-
-		// update replicas and let replicas release CS lock they are holding
-
-		// release locks after operations
-
-		return false; // change to your final answer
-
+			// update replicas and let replicas release CS lock they are holding
+			node.multicastUpdateOrReadReleaseLockOperation(m);
+			
+			// release locks after operations
+			node.releaseLocks();
+		}
+		return decision; // change to your final answer
 	}
 
 	/**
