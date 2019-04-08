@@ -133,7 +133,7 @@ public class FileManager extends Thread {
 		// choose any available node
 		Random r = new Random();
 		Message m = (Message) activenodes.toArray()[r.nextInt(activenodes.size())];
-
+		m.setOptype(OperationType.READ);
 		// locate the registry and see if the node is still active by retrieving its
 		// remote object
 		Registry reg = Util.locateRegistry(m.getNodeIP());
