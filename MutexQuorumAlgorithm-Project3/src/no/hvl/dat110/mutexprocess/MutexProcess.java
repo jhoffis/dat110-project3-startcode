@@ -87,7 +87,6 @@ public class MutexProcess extends UnicastRemoteObject implements ProcessInterfac
 		// release your lock variables and logical clock update
 		CS_BUSY = false;
 		WANTS_TO_ENTER_CS = false;
-		incrementclock();
 		// update clock
 	}
 
@@ -99,6 +98,7 @@ public class MutexProcess extends UnicastRemoteObject implements ProcessInterfac
 
 		// multicast read request to start the voting to N/2 + 1 replicas (majority) -
 		// optimal. You could as well send to all the replicas that have the file
+		WANTS_TO_ENTER_CS = true;
 		return multicastMessage(message, N - 1);
 	}
 
@@ -128,26 +128,27 @@ public class MutexProcess extends UnicastRemoteObject implements ProcessInterfac
 		// feedback is received
 
 		CS_BUSY = true;
+		
+		synchronized(queueACK)
+		{
+			for (String rep : replicas) {
+				try {
+					ProcessInterface pi = Util.registryHandle(rep);
 
-		for (String rep : replicas) {
-			try {
-				ProcessInterface pi = Util.registryHandle(rep);
-				// Hentet ut prosessen.. Hva skal den brukes til?
-
-				queueACK.add(pi.onMessageReceived(message));
-			} catch (NotBoundException e) {
-				e.printStackTrace();
+					queueACK.add(pi.onMessageReceived(message));
+				} catch (NotBoundException e) {
+					e.printStackTrace();
+				}
 			}
 		}
-
+		
+		
 		CS_BUSY = false;
 
 		// do something with the acknowledgement you received from the voters - Idea:
 		// use the queueACK to collect GRANT/DENY messages and make sure queueACK is
 		// synchronized!!!
 
-		// compute election result - Idea call majorityAcknowledged()
-		replicas = Util.getProcessReplicas();
 		return majorityAcknowledged(); // change to the election result
 
 	}
@@ -217,7 +218,7 @@ public class MutexProcess extends UnicastRemoteObject implements ProcessInterfac
 
 		if (!message.isAcknowledged()) {
 			// Release
-			CS_BUSY = false;
+			releaseLocks();
 		} else {
 			// otherwise lock is kept - says hey im about to use this critical section.
 			CS_BUSY = true;

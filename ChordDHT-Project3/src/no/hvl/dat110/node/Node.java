@@ -278,6 +278,7 @@ public class Node extends UnicastRemoteObject implements ChordNodeInterface {
 	public void releaseLocks() throws RemoteException {
 		CS_BUSY = false;
 		WANTS_TO_ENTER_CS = false;
+		incrementclock();
 	}
 	
 	@Override
@@ -415,7 +416,7 @@ public class Node extends UnicastRemoteObject implements ChordNodeInterface {
 		
 		queueACK.clear();
 
-		return (totalAcknowledged >= quorum);		
+		return (totalAcknowledged >= (activenodesforfile.size()/2));		
 	}
 
 	@Override
@@ -488,7 +489,7 @@ public class Node extends UnicastRemoteObject implements ChordNodeInterface {
 			try {
 				Registry reg = Util.locateRegistry(m.getNodeIP());
 				ChordNodeInterface node = (ChordNodeInterface) reg.lookup(m.getNodeID().toString());
-				node.onReceivedUpdateOperation(message);
+				node.onReceivedVotersDecision(message);
 			} catch (Exception e) {
 				e.printStackTrace();
 			}

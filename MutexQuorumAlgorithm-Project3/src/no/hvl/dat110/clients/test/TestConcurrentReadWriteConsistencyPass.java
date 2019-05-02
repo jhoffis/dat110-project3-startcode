@@ -140,7 +140,6 @@ class TestConcurrentReadWriteConsistencyPass {
 				recprocess.multicastVotersDecision(wmessage); 							// multicast the decision to others
 				succeeded = performWriteOperation(recprocess, wmessage); 				// perform a write operation
 				//Thread.sleep(1000);
-				System.out.println("WRITEEEE" + succeeded);
 			}catch(Exception e) {
 				
 			}
@@ -175,7 +174,6 @@ class TestConcurrentReadWriteConsistencyPass {
 				succeeded = performReadOperation(recprocess, rmessage); 						// perform a read operation
 //				Thread.sleep(5000);
 				
-				System.out.println("EYYYY" +  succeeded);
 			}catch(Exception e) {
 				
 			}
