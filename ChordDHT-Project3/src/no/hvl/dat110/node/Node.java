@@ -326,6 +326,7 @@ public class Node extends UnicastRemoteObject implements ChordNodeInterface {
 		// feedback is received
 
 		CS_BUSY = true;
+        queueACK.clear();
 		
 		synchronized(queueACK)
 		{
@@ -416,7 +417,7 @@ public class Node extends UnicastRemoteObject implements ChordNodeInterface {
 		
 		queueACK.clear();
 
-		return (totalAcknowledged >= (activenodesforfile.size()/2));		
+		return (totalAcknowledged >= (activenodesforfile.size()/2+1));		
 	}
 
 	@Override

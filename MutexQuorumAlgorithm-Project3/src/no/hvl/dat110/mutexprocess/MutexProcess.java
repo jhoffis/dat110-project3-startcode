@@ -128,6 +128,7 @@ public class MutexProcess extends UnicastRemoteObject implements ProcessInterfac
 		// feedback is received
 
 		CS_BUSY = true;
+		queueACK.clear();
 		
 		synchronized(queueACK)
 		{
